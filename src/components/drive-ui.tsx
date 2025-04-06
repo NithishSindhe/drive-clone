@@ -228,7 +228,7 @@ export default function DriveUI() {
           <Progress value={35} className="h-2" />
           <p className="text-xs text-muted-foreground">3.5 GB of 15 GB used</p>
         </div>
-        <Button variant="outline" className="w-full justify-start gap-2">
+        <Button variant="outline" className="w-full justify-start gap-2 text-foreground">
           <Settings className="h-4 w-4" />
           <span>Settings</span>
         </Button>
