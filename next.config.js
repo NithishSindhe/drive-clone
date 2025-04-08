@@ -5,6 +5,12 @@
 import "./src/env.js";
 
 /** @type {import("next").NextConfig} */
-const config = {};
+const config = { 
+    eslint: {
+    },
+    typescript:{
+    } 
+
+};
 
 export default config;
