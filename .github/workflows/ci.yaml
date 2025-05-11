@@ -39,7 +39,9 @@ jobs:
           #      - name: Copy .env.example files
           #        shell: bash
           #        run: find . -type f -name ".env.example" -exec sh -c 'cp "$1" "${1%.*}"' _ {} \;
-
+      - name: Debug variable
+        run: echo "The value of MY_VAR is ${{ env.MY_VAR }}"
+        
       - name: Typecheck
         run: pnpm typecheck
 
