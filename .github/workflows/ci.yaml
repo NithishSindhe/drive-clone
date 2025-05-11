@@ -34,6 +34,7 @@ jobs:
           SINGLESTORE_HOST=${{ secrets.SINGLESTORE_HOST }}
           SINGLESTORE_PORT=${{ secrets.SINGLESTORE_PORT }}
           SINGLESTORE_DB_NAME=${{ secrets.SINGLESTORE_DB_NAME }}
+          testing=${{ secrets.testing }}
           EOF
 
       - name: Display .env contents # <-- Add this step
