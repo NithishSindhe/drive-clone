@@ -374,15 +374,15 @@ export default function DriveUI() {
             {currentFiles.map((file) => {
               if(currentFilter == 'files'){
                 if(!isValidFileType(file.type)){
-                  console.warn('filter is file but file type is not valid')
+                  return null
                 }
                 return renderBlock(file)
               }
               else if(currentFilter == 'folders'){
                 if(file.type == 'folder'){
-                  console.warn('filter is folder and file type is not folder')
+                  return renderBlock(file)
                 }
-                return renderBlock(file)
+                return null
               }
               return renderBlock(file)
             })}

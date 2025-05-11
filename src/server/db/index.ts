@@ -43,7 +43,13 @@ async function testDbConnection() {
     console.error("❌ Failed to connect to SingleStore:", error);
   }
 }
+testDbConnection()
+  .then(() => {
+    console.debug('connected to database Successfully')
+  })
+  .catch((error) => {
+    console.error("error trying to connect to datatbase:", error);
+  });
 
-testDbConnection();
 
 export const db = drizzle(conn, { schema,mode: "default" });
