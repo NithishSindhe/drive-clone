@@ -13,6 +13,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: staging
     env:
       SINGLESTORE_PASS: ${{ secrets.SINGLESTORE_PASS }}
       SINGLESTORE_USER: ${{ secrets.SINGLESTORE_USER }}
@@ -37,9 +38,6 @@ jobs:
           DATABASE_URL=${{ secrets.DATABASE_URL }}
           testing=${{ secrets.testing }}
           EOF
-
-      - name: Debug variable
-        run: echo "SINGLESTORE_PASS=${{ secrets.SINGLESTORE_PASS }}"
         
       - name: Typecheck
         run: pnpm typecheck
