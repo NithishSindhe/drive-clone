@@ -26,6 +26,16 @@ jobs:
       - name: Install Dependencies
         run: npm install -g pnpm && pnpm install
 
+      - name: Create .env from secrets
+        run: |
+          cat <<EOF > .env
+          SINGLESTORE_PASS=${{ secrets.SINGLESTORE_PASS }}
+          SINGLESTORE_USER=${{ secrets.SINGLESTORE_USER }}
+          SINGLESTORE_HOST=${{ secrets.SINGLESTORE_HOST }}
+          SINGLESTORE_PORT=${{ secrets.SINGLESTORE_PORT }}
+          SINGLESTORE_DB_NAME=${{ secrets.SINGLESTORE_DB_NAME }}
+          EOF
+
       - name: Copy .env.example files
         shell: bash
         run: find . -type f -name ".env.example" -exec sh -c 'cp "$1" "${1%.*}"' _ {} \;
