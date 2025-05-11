@@ -1,10 +1,24 @@
 name: CI
 
-on: [push]
+on:
+  push:
+    branches:
+      - main
+      - staging
+  pull_request:
+    branches:
+      - main
+      - staging
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      SINGLESTORE_PASS: ${{ secrets.SINGLESTORE_PASS }}
+      SINGLESTORE_USER: ${{ secrets.SINGLESTORE_USER }}
+      SINGLESTORE_HOST: ${{ secrets.SINGLESTORE_HOST }}
+      SINGLESTORE_PORT: ${{ secrets.SINGLESTORE_PORT }}
+      SINGLESTORE_DB_NAME: ${{ secrets.SINGLESTORE_DB_NAME }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
