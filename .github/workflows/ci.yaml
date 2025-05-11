@@ -13,7 +13,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: staging
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
     env:
       SINGLESTORE_PASS: ${{ secrets.SINGLESTORE_PASS }}
       SINGLESTORE_USER: ${{ secrets.SINGLESTORE_USER }}
