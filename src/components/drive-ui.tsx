@@ -18,10 +18,12 @@ import {
   Upload,
 } from "lucide-react"
 
+const validFileTypes = ["document" , "image" , "pdf" , "spreadsheet" , "presentation"] as const
+type FileTypeKind = typeof validFileTypes[number];
 interface FileType {
   id: string;
   name: string;
-  type: "document" | "image" | "pdf" | "spreadsheet" | "presentation";
+  type: FileTypeKind;
   size: string;
   modified: string;
 }
@@ -95,6 +97,7 @@ export default function DriveUI() {
   const [currentPath, setCurrentPath] = useState<string[]>([])
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [currentFiles, setCurrentFiles] = useState(initialFiles)
+  const [currentFilter, setCurrentFilter] = useState('all')
 
   // Function to get file icon based on type
   const getFileIcon = (type: string) => {
@@ -181,7 +184,48 @@ export default function DriveUI() {
   function isFileType(item: FileType | FolderType): item is FileType {
     return item.type !== "folder" && 'size' in item && 'modified' in item;
   }
+  const handleTabChange = (value: string) => {
+    setCurrentFilter(value)
+  };
 
+  const isValidFileType  = (type: string): type is FileTypeKind => {
+    return validFileTypes.includes(type as FileType["type"]);
+  }
+  
+  const renderBlock = (file:FileType|FolderType):JSX.Element => {
+    return <Card key={file.id} className="overflow-hidden">
+                <div
+                  className="flex cursor-pointer flex-col p-4"
+                  onClick={() => (file.type === "folder" ? navigateToFolder(file, currentPath) : null)}
+                >
+                  <div className="flex items-center justify-between">
+                    {getFileIcon(file.type)}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="h-4 w-4" />
+                          <span className="sr-only">More</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem>Download</DropdownMenuItem>
+                        <DropdownMenuItem>Rename</DropdownMenuItem>
+                        <DropdownMenuItem>Move</DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                  <div className="mt-2">
+                    <h3 className="font-medium">{file.name}</h3>
+                    {file.type !== "folder" && (
+                      <p className="text-xs text-muted-foreground">
+                        {file.size} • {file.modified}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </Card> 
+  }
   return (
   <div className="flex h-screen w-screen bg-background">
     {/* Sidebar */}
@@ -311,8 +355,8 @@ export default function DriveUI() {
 
       {/* Content */}
       <main className="flex-1 overflow-auto p-4">
-        <Tabs defaultValue="all" className="mb-4">
-          <TabsList>
+        <Tabs defaultValue="all" onValueChange={handleTabChange} className="mb-4">
+          <TabsList >
             <TabsTrigger value="all">All</TabsTrigger>
             <TabsTrigger value="folders">Folders</TabsTrigger>
             <TabsTrigger value="files">Files</TabsTrigger>
@@ -327,40 +371,21 @@ export default function DriveUI() {
 
         {viewMode === "grid" ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-            {currentFiles.map((file) => (
-              <Card key={file.id} className="overflow-hidden">
-                <div
-                  className="flex cursor-pointer flex-col p-4"
-                  onClick={() => (file.type === "folder" ? navigateToFolder(file, currentPath) : null)}
-                >
-                  <div className="flex items-center justify-between">
-                    {getFileIcon(file.type)}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreVertical className="h-4 w-4" />
-                          <span className="sr-only">More</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>Download</DropdownMenuItem>
-                        <DropdownMenuItem>Rename</DropdownMenuItem>
-                        <DropdownMenuItem>Move</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                  <div className="mt-2">
-                    <h3 className="font-medium">{file.name}</h3>
-                    {file.type !== "folder" && (
-                      <p className="text-xs text-muted-foreground">
-                        {file.size} • {file.modified}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </Card>
-            ))}
+            {currentFiles.map((file) => {
+              if(currentFilter == 'files'){
+                if(!isValidFileType(file.type)){
+                  console.warn('filter is file but file type is not valid')
+                }
+                return renderBlock(file)
+              }
+              else if(currentFilter == 'folders'){
+                if(file.type == 'folder'){
+                  console.warn('filter is folder and file type is not folder')
+                }
+                return renderBlock(file)
+              }
+              return renderBlock(file)
+            })}
           </div>
         ) : (
           <div className="rounded-lg border">
