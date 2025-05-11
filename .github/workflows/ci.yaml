@@ -36,9 +36,9 @@ jobs:
           SINGLESTORE_DB_NAME=${{ secrets.SINGLESTORE_DB_NAME }}
           EOF
 
-          #      - name: Copy .env.example files
-          #        shell: bash
-          #        run: find . -type f -name ".env.example" -exec sh -c 'cp "$1" "${1%.*}"' _ {} \;
+      - name: Display .env contents # <-- Add this step
+        run: cat .env
+
       - name: Debug variable
         run: echo "The value of MY_VAR is ${{ env.MY_VAR }}"
         
