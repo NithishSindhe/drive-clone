@@ -34,21 +34,12 @@ jobs:
           SINGLESTORE_HOST=${{ secrets.SINGLESTORE_HOST }}
           SINGLESTORE_PORT=${{ secrets.SINGLESTORE_PORT }}
           SINGLESTORE_DB_NAME=${{ secrets.SINGLESTORE_DB_NAME }}
+          DATABASE_URL=${{ secrets.DATABASE_URL }}
           testing=${{ secrets.testing }}
           EOF
-      - name: List Git configuration
-        run: git config --list
-      - name: Dump GitHub context
-        run: echo '${{ toJSON(github) }}'
-      - name: Dump env context
-        run: echo '${{ toJSON(env) }}'
-      - name: Dump runner context
-        run: echo '${{ toJSON(runner) }}'
-      - name: Display .env contents # <-- Add this step
-        run: cat .env
 
       - name: Debug variable
-        run: echo "The value of MY_VAR is ${{ env.MY_VAR }}"
+        run: echo "SINGLESTORE_PASS=${{ secrets.SINGLESTORE_PASS }}"
         
       - name: Typecheck
         run: pnpm typecheck
