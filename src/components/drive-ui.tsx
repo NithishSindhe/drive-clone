@@ -42,6 +42,7 @@ import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import  DarkMode from  "@/components/dark-mode"
 
 // Mock data
 const initialFiles:(FileType | FolderType)[] = [
@@ -192,6 +193,7 @@ export default function DriveUI() {
     return validFileTypes.includes(type as FileType["type"]);
   }
   
+
   const renderBlock = (file:FileType|FolderType):JSX.Element => {
     return <Card key={file.id} className="overflow-hidden">
                 <div
@@ -226,6 +228,7 @@ export default function DriveUI() {
                 </div>
               </Card> 
   }
+
   return (
   <div className="flex h-screen w-screen bg-background">
     {/* Sidebar */}
@@ -236,6 +239,7 @@ export default function DriveUI() {
         </div>
         <h1 className="text-xl font-bold text-primary">Drive Clone</h1>
       </div>
+      
 
       <Button className="mb-6 w-full justify-start gap-2" onClick={handleUpload}>
         <Plus className="h-4 w-4" />
@@ -285,6 +289,7 @@ export default function DriveUI() {
       <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:px-6">
         <Input className="max-w-sm" placeholder="Search in Drive" type="search" />
         <div className="ml-auto flex items-center gap-2">
+          <DarkMode></DarkMode>
           <Button
             variant="ghost"
             size="icon"
