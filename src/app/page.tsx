@@ -2,8 +2,6 @@ import DriveUI from '../components/drive-ui';
 
 export default function HomePage() {
   return (
-    <main id="main" className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
     <DriveUI/>
-    </main>
   );
 }
