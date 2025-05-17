@@ -18,23 +18,6 @@ import {
   Upload,
 } from "lucide-react"
 
-const validFileTypes = ["document" , "image" , "pdf" , "spreadsheet" , "presentation"] as const
-type FileTypeKind = typeof validFileTypes[number];
-interface FileType {
-  id: string;
-  name: string;
-  type: FileTypeKind;
-  size: string;
-  modified: string;
-}
-
-interface FolderType {
-  id: string;
-  name: string;
-  type: "folder";
-  items: (FileType | FolderType)[]; // Recursive definition
-}
-
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -44,62 +27,21 @@ import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import  DarkMode from  "@/components/dark-mode"
 
-// Mock data
-const initialFiles:(FileType | FolderType)[] = [
-  {
-  id: "1",
-  name: "Documents",
-  type: "folder",
-  items: [
-    {
-      id: "1-1",
-      name: "Work",
-      type: "folder",
-      items: [
-        { id: "1-1-1", name: "Project Proposal.docx", type: "document", size: "245 KB", modified: "Apr 12, 2023" },
-        { id: "1-1-2", name: "Budget.xlsx", type: "spreadsheet", size: "132 KB", modified: "Apr 15, 2023" },
-      ],
-    },
-    {
-      id: "1-2",
-      name: "Personal",
-      type: "folder",
-      items: [
-        { id: "1-2-1", name: "Resume.pdf", type: "pdf", size: "420 KB", modified: "Jan 5, 2023" },
-        { id: "1-2-2", name: "Tax Return.pdf", type: "pdf", size: "2.3 MB", modified: "Mar 20, 2023" },
-      ],
-    },
-    { id: "1-3", name: "Meeting Notes.docx", type: "document", size: "78 KB", modified: "Apr 2, 2023" },
-  ],
-  },
-  {
-  id: "2",
-  name: "Photos",
-  type: "folder",
-  items: [
-    {
-      id: "2-1",
-      name: "Vacation",
-      type: "folder",
-      items: [
-        { id: "2-1-1", name: "Beach.jpg", type: "image", size: "3.2 MB", modified: "Jul 22, 2022" },
-        { id: "2-1-2", name: "Mountains.jpg", type: "image", size: "2.8 MB", modified: "Jul 23, 2022" },
-      ],
-    },
-    { id: "2-2", name: "Family.jpg", type: "image", size: "4.5 MB", modified: "Dec 25, 2022" },
-  ],
-  },
-  { id: "3", name: "Project Plan.pdf", type: "pdf", size: "1.2 MB", modified: "Apr 10, 2023" },
-  { id: "4", name: "Budget Report.xlsx", type: "spreadsheet", size: "845 KB", modified: "Apr 5, 2023" },
-  { id: "5", name: "Presentation.pptx", type: "presentation", size: "4.2 MB", modified: "Apr 8, 2023" },
-]
+import type { FolderType, FileType } from "@/lib/mock-data"
+import { mockFiles,mockFolders } from "@/lib/mock-data"
+
 
 export default function DriveUI() {
   const [currentPath, setCurrentPath] = useState<string[]>([])
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
-  const [currentFiles, setCurrentFiles] = useState(initialFiles)
+  const [allFiles, setAllFiles] = useState(mockFiles)
+  const [allFolders, setAllFolders] = useState(mockFolders)
+  const [currentDirectory, setCurrentDirectory] = useState<string>('root')
   const [currentFilter, setCurrentFilter] = useState('all')
-
+  const id_to_name = [...allFiles,...allFolders].reduce((acc, item) => {
+    acc[item.id] = item.name;
+    return acc;
+  }, {} as Record<string, string>);
   // Function to get file icon based on type
   const getFileIcon = (type: string) => {
   switch (type) {
@@ -120,67 +62,45 @@ export default function DriveUI() {
   }
   }
 
-  // Navigate to a folder
   const navigateToFolder = (folder: FolderType, path: string[]) => {
-  setCurrentPath([...path, folder.name])
-  setCurrentFiles(folder.items || [])
+    setCurrentPath([...path, folder.id])
+    setCurrentDirectory(folder.id)
   }
 
-  // Navigate up one level
   const navigateUp = () => {
-  if (currentPath.length === 0) return
-
-  let current = initialFiles
-  const newPath = [...currentPath]
-  newPath.pop()
-
-  // Navigate through the path to find the correct folder
-  for (const segment of newPath) {
-    const found = current.find((item) => item.name === segment && item.type === "folder");
-    if (found) {
-      if (found.type === "folder" && 'items' in found && found.items) {
-        current = found.items;
-      }
-    }
-  }
-  setCurrentPath(newPath)
-  setCurrentFiles(current)
+    if (currentPath.length === 0) return
+    const newPath = [...currentPath]
+    newPath.pop()
+    setCurrentDirectory(newPath[newPath.length - 1] ?? 'root');
+    setCurrentPath(newPath)
   }
 
-  // Handle file upload (mock)
   const handleUpload = () => {
-  const input = document.createElement("input")
-  input.type = "file"
-  input.multiple = true
-  input.onchange = (e) => {
-    const files = (e.target as HTMLInputElement).files
-    if (files && files.length > 0) {
-      // Mock adding the files to the current directory
-      const newFiles = [...currentFiles]
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i]
-        if(file){
-			newFiles.push({
-            id: `new-${Date.now()}-${i}`,
-            name: file.name,
-            type: file.type.includes("image")
-              ? "image"
-              : file.type.includes("pdf")
-                ? "pdf"
-                : file.type.includes("spreadsheet")
-                  ? "spreadsheet"
-                  : file.type.includes("presentation")
-                    ? "presentation"
-                    : "document",
-            size: `${(file.size / 1024).toFixed(0)} KB`,
-            modified: new Date().toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" }),
-			});
+    const input = document.createElement("input")
+    input.type = "file"
+    input.multiple = true
+    input.onchange = (e) => {
+      const files = (e.target as HTMLInputElement).files
+      if (files && files.length > 0) {
+        // Mock adding the files to the current directory
+        const newFiles = [...allFiles]
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i]
+          if(file){
+            newFiles.push({
+              id: `new-${Date.now()}-${i}`,
+              url: `${currentPath.join("/")}/new-${Date.now()}-${i}`,
+              name: file.name,
+              type: 'file',
+              size: `${(file.size / 1024).toFixed(0)} KB`,
+              parent: currentDirectory
+            });
+          }
         }
+        setAllFiles(newFiles)
       }
-      setCurrentFiles(newFiles)
     }
-  }
-  input.click()
+    input.click()
   }
   function isFileType(item: FileType | FolderType): item is FileType {
     return item.type !== "folder" && 'size' in item && 'modified' in item;
@@ -189,44 +109,43 @@ export default function DriveUI() {
     setCurrentFilter(value)
   };
 
-  const isValidFileType  = (type: string): type is FileTypeKind => {
-    return validFileTypes.includes(type as FileType["type"]);
-  }
-  
+  //const isValidFileType  = (type: string): type is FileTypeKind => {
+  //  return validFileTypes.includes(type as FileType["type"]);
+  //}
 
   const renderBlock = (file:FileType|FolderType):JSX.Element => {
     return <Card key={file.id} className="overflow-hidden">
-                <div
-                  className="flex cursor-pointer flex-col p-4"
-                  onClick={() => (file.type === "folder" ? navigateToFolder(file, currentPath) : null)}
-                >
-                  <div className="flex items-center justify-between">
-                    {getFileIcon(file.type)}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreVertical className="h-4 w-4" />
-                          <span className="sr-only">More</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>Download</DropdownMenuItem>
-                        <DropdownMenuItem>Rename</DropdownMenuItem>
-                        <DropdownMenuItem>Move</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                  <div className="mt-2">
-                    <h3 className="font-medium">{file.name}</h3>
-                    {file.type !== "folder" && (
-                      <p className="text-xs text-muted-foreground">
-                        {file.size} • {file.modified}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </Card> 
+      <div
+        className="flex cursor-pointer flex-col p-4"
+        onClick={() => (file.type === "folder" ? navigateToFolder(file, currentPath) : null)}
+      >
+        <div className="flex items-center justify-between">
+          {getFileIcon(file.type)}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreVertical className="h-4 w-4" />
+                <span className="sr-only">More</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>Download</DropdownMenuItem>
+              <DropdownMenuItem>Rename</DropdownMenuItem>
+              <DropdownMenuItem>Move</DropdownMenuItem>
+              <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        <div className="mt-2">
+          <h3 className="font-medium">{file.name}</h3>
+          {file.type !== "folder" && (
+            <p className="text-xs text-muted-foreground">
+              {file.size}
+            </p>
+          )}
+        </div>
+      </div>
+    </Card> 
   }
 
   return (
@@ -252,7 +171,6 @@ export default function DriveUI() {
           className="w-full justify-start gap-2"
           onClick={() => {
             setCurrentPath([])
-            setCurrentFiles(initialFiles)
           }}
         >
           <Home className="h-4 w-4" />
@@ -322,14 +240,13 @@ export default function DriveUI() {
           size="sm"
           onClick={() => {
             setCurrentPath([])
-            setCurrentFiles(initialFiles)
+            setCurrentDirectory('root')
           }}
         >
           My Drive
         </Button>
-
-        {currentPath.map((segment, index) => (
-          <div key={index} className="flex items-center">
+        {currentPath.map((file_id, index) => {
+          return <div key={index} className="flex items-center">
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
             <Button
               variant="ghost"
@@ -337,25 +254,17 @@ export default function DriveUI() {
               onClick={() => {
                 // Navigate to this specific path level
                 const newPath = currentPath.slice(0, index + 1)
-                let current = initialFiles
-
-                for (const segment of newPath) {
-                  const found = current.find((item) => item.name === segment && item.type === "folder");
-                  if (found) {
-                    if (found.type === "folder" && 'items' in found && found.items) {
-                      current = found.items;
-                    }
-                  }
+                const found = allFolders.find((item) => (file_id === item.id))
+                if(found){
+                  setCurrentDirectory(found.id)
                 }
-
                 setCurrentPath(newPath)
-                setCurrentFiles(current)
               }}
             >
-              {segment}
+              {id_to_name[file_id]}
             </Button>
           </div>
-        ))}
+        })}
       </div>
 
       {/* Content */}
@@ -376,20 +285,17 @@ export default function DriveUI() {
 
         {viewMode === "grid" ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-            {currentFiles.map((file) => {
-              if(currentFilter == 'files'){
-                if(!isValidFileType(file.type)){
-                  return null
-                }
+            {allFolders.map((folder) => {
+              if((currentFilter === 'folders' || currentFilter === 'all') && (folder.parent === currentDirectory)){
+                return renderBlock(folder)
+              }
+              return null
+            })}
+            {allFiles.map((file) => {
+              if((currentFilter == 'files' || currentFilter === 'all') && (file.parent === currentDirectory)){
                 return renderBlock(file)
               }
-              else if(currentFilter == 'folders'){
-                if(file.type == 'folder'){
-                  return renderBlock(file)
-                }
-                return null
-              }
-              return renderBlock(file)
+              return null
             })}
           </div>
         ) : (
@@ -401,38 +307,41 @@ export default function DriveUI() {
               <div className="col-span-1"></div>
             </div>
             <Separator />
-            {currentFiles.map((file) => (
-              <div key={file.id}>
-                <div
-                  className="grid cursor-pointer grid-cols-12 items-center gap-2 p-3 hover:bg-muted/50"
-                  onClick={() => (file.type === "folder" ? navigateToFolder(file, currentPath) : null)}
-                >
-                  <div className="col-span-6 flex items-center gap-2">
-                    {getFileIcon(file.type)}
-                    <span>{file.name}</span>
+            {[...allFiles,...allFolders].map((file) => {
+              if(file.parent === currentDirectory){
+                return <div key={file.id}>
+                  <div
+                    className="grid cursor-pointer grid-cols-12 items-center gap-2 p-3 hover:bg-muted/50"
+                    onClick={() => (file.type === "folder" ? navigateToFolder(file, currentPath) : null)}
+                  >
+                    <div className="col-span-6 flex items-center gap-2">
+                      {getFileIcon(file.type)}
+                      <span>{file.name}</span>
+                    </div>
+                    <div className="col-span-3 text-sm text-muted-foreground">{isFileType(file) ? "modified" : "—"}</div>
+                    <div className="col-span-2 text-sm text-muted-foreground">{isFileType(file) ? file.size : "—"}</div>
+                    <div className="col-span-1 text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreVertical className="h-4 w-4" />
+                            <span className="sr-only">More</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>Download</DropdownMenuItem>
+                          <DropdownMenuItem>Rename</DropdownMenuItem>
+                          <DropdownMenuItem>Move</DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
-                  <div className="col-span-3 text-sm text-muted-foreground">{isFileType(file) ? file.modified : "—"}</div>
-                  <div className="col-span-2 text-sm text-muted-foreground">{isFileType(file) ? file.size : "—"}</div>
-                  <div className="col-span-1 text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreVertical className="h-4 w-4" />
-                          <span className="sr-only">More</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>Download</DropdownMenuItem>
-                        <DropdownMenuItem>Rename</DropdownMenuItem>
-                        <DropdownMenuItem>Move</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
+                  <Separator />
                 </div>
-                <Separator />
-              </div>
-            ))}
+              }
+              return null
+            })}
           </div>
         )}
       </main>

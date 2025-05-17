@@ -8,12 +8,9 @@ export default function DarkMode() {
 
   useEffect(() => {
     const storedMode = localStorage.getItem('mode') as 'dark' | 'light' | null;
-    if (storedMode) {
-      setMode(storedMode);
-      document.documentElement.classList.toggle('dark', storedMode === 'dark');
-    } else {
-      document.documentElement.classList.toggle('dark', mode === 'dark');
-    }
+    const initialMode = storedMode ?? 'dark'; //default mode
+    setMode(initialMode);
+    document.documentElement.classList.toggle('dark', initialMode === 'dark');
   }, []);
 
   useEffect(() => {
