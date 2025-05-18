@@ -42,3 +42,13 @@ export const users = mysqlTable(
     updatedAt: timestamp("updated_at").onUpdateNow(),
   }
 );
+
+export const files = mysqlTable(
+  "files_table",
+  {
+    id: int("id").primaryKey().autoincrement(),
+    name: text("name"),
+
+
+  }
+  );
